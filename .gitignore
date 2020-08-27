@@ -9,4 +9,4 @@ cmake_install.cmake
 compile_commands.json
 MakeFile
 /nbproject
-/CMakeFiles
+/CMakeFiles/*
