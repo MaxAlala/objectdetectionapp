@@ -1,0 +1,13 @@
+/home/northlight/object_detection_app/CMakeFiles/edit_cache.dir
+/home/northlight/object_detection_app/CMakeFiles/rebuild_cache.dir
+/home/northlight/object_detection_app/CMakeFiles/frame_tf_broadcaster.dir
+/home/northlight/object_detection_app/CMakeFiles/take_image.dir
+/home/northlight/object_detection_app/CMakeFiles/test_localization.dir
+/home/northlight/object_detection_app/CMakeFiles/d2co.dir
+/home/northlight/object_detection_app/CMakeFiles/cv_ext.dir
+/home/northlight/object_detection_app/CMakeFiles/test_model.dir
+/home/northlight/object_detection_app/CMakeFiles/test_line2D.dir
+/home/northlight/object_detection_app/CMakeFiles/test_distance_maps.dir
+/home/northlight/object_detection_app/CMakeFiles/generate_models.dir
+/home/northlight/object_detection_app/CMakeFiles/test_charger_arm.dir
+/home/northlight/object_detection_app/CMakeFiles/detect_object.dir

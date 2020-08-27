@@ -1,0 +1,11 @@
+/bin/*
+/build/*
+!/bin/3D_models
+!/bin/test_images
+!/bin/saved_images
+/lib/*
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+MakeFile
+/nbproject

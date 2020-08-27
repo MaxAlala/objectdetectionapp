@@ -1,0 +1,24 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+./include/lsd.h
+
+/home/northlight/object_detection_app/src/lsd.c
+stdio.h
+-
+stdlib.h
+-
+math.h
+-
+limits.h
+-
+float.h
+-
+lsd.h
+/home/northlight/object_detection_app/src/lsd.h
+
