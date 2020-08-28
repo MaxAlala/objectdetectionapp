@@ -7,6 +7,6 @@
 CMakeCache.txt
 cmake_install.cmake
 compile_commands.json
-MakeFile
+Makefile
 /nbproject
 /CMakeFiles/*
