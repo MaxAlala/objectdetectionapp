@@ -376,7 +376,7 @@ void opencv::runNode(int argc, char** argv, Eigen::Vector4d& position_of_the_fir
             markers[i].color.b = 153.0f;
             markers[i].color.a = 0.7;
 
-            if (i % 2 == 0) markers[i].mesh_resource = "package://using_markers/src/AX-01b_bearing_box.stl";
+            if (i % 2 == 0) markers[i].mesh_resource = "package://mesh/AX-01b_bearing_box.stl";
             else markers[i].text = "DETECTED DETAIL";
             markers[i].lifetime = ros::Duration();
 

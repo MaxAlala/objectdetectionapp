@@ -8,7 +8,7 @@
 #include <boost/concept_check.hpp>
 #include <boost/thread/locks.hpp>
 
-#include </home/northlight/OpenMesh-3.3/src/OpenMesh/Core/IO/MeshIO.hh>
+#include <OpenMesh/Core/IO/MeshIO.hh>
 #include "raster_object_model3D.h"
 
 // Include GLEW
@@ -35,7 +35,7 @@ using namespace cv;
 #define GLM_FORCE_RADIANS
 #endif
 
-#include </home/northlight/OpenMesh-3.3/src/OpenMesh/Core/Mesh/TriMesh_ArrayKernelT.hh>
+#include <OpenMesh/Core/Mesh/TriMesh_ArrayKernelT.hh>
 typedef OpenMesh::TriMesh_ArrayKernelT<>  Mesh;
 
 static Mat debug_img, color_debug_img;

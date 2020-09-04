@@ -26,9 +26,6 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
-#include "/usr/local/include/opencv2/opencv.hpp"
-#include </usr/local/include/opencv2/core/core.hpp>
-#include </usr/local/include/opencv2/highgui/highgui.hpp>
 #include <iostream>
 #include <stdexcept>
 #include <boost/date_time/posix_time/posix_time.hpp>

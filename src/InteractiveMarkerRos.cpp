@@ -49,7 +49,8 @@ int createServerAndSendCoordinates() {
     //	Create a hint structure for the server we're connecting with
     int port = 54600;
     string ipAddress = "192.168.212.99";
-    std::string coordinates = "<Server><Pos2><X>" + to_string(g_position_of_the_first_match[0]) + "</X><Y>" + to_string(g_position_of_the_first_match[1]) + "</Y><Z>" + to_string(g_position_of_the_first_match[2] + 100) + "</Z><A>" + to_string(g_r_quat.toRotationMatrix().eulerAngles(2,1,0)(0)+90) + "</A><B>" + to_string(1) + "</B><C>" + to_string(180) + "</C><S>0</S></Pos2></Server>";
+    int multiplier = 10;
+    std::string coordinates = "<Server><Pos2><X>" + to_string(g_position_of_the_first_match[0]*multiplier) + "</X><Y>" + to_string(g_position_of_the_first_match[1]*multiplier) + "</Y><Z>" + to_string(g_position_of_the_first_match[2]*multiplier + 200) + "</Z><A>" + to_string(g_r_quat.toRotationMatrix().eulerAngles(2,1,0)(0)*180/3.1415 + 90) + "</A><B>" + to_string(1) + "</B><C>" + to_string(180) + "</C></Pos2></Server>";
 
     sockaddr_in hint;
     hint.sin_family = AF_INET;
@@ -185,7 +186,7 @@ Marker InteractiveMarkerRos::makeBox(InteractiveMarker &msg) {
     Marker marker;
     float scale = 0.10;
     marker.type = visualization_msgs::Marker::MESH_RESOURCE;
-    marker.mesh_resource = "package://using_markers/src/AX-01b_bearing_box.stl";
+    marker.mesh_resource = "package://mesh/AX-01b_bearing_box.stl";
     marker.scale.x = scale;
     marker.scale.y = scale;
     marker.scale.z = scale;

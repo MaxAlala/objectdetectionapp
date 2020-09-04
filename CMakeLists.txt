@@ -44,7 +44,7 @@ endif()
 #################################
 
 
-set(CMAKE_CURRENT_SOURCE_DIR ~/object_detection_app)
+set(CMAKE_CURRENT_SOURCE_DIR ~/d2co/objectdetectionapp)
 # This is to be complinat with OpenCV >= 3.3.1
 set(EXTRA_CXX_FLAGS "${EXTRA_CXX_FLAGS} -DOPENCV_TRAITS_ENABLE_DEPRECATED")
 
@@ -92,12 +92,12 @@ endif ()
 
 find_library( LIBUUID_LIBRARIES uuid)
 #set(OpenCV_DIR "/usr/local")
-find_package(OpenCV REQUIRED PATHS /usr/local/share/OpenCV NO_DEFAULT_PATH)
+find_package(OpenCV REQUIRED )
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 find_package(Eigen3 REQUIRED)
 find_package (PCL 1.8 REQUIRED)
-set(PCL_LIBRARY_DIRS /home/northlight/Downloads/pcl-pcl-1.8.0/build/lib)
+set(PCL_LIBRARY_DIRS ~/Downloads/pcl-pcl-1.8.0/build/lib)
 find_package(OpenGL REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_search_module(GLFW REQUIRED glfw3)
@@ -113,14 +113,14 @@ find_library( DIME_LIBS dime )
 find_library( GLEW_LIBS GLEW )
 set(OPENMESH_HEADER MeshIO.hh)
 
-find_library( OPENMESHCORE_LIBS OpenMeshCore PATHS "/home/northlight/OpenMesh-3.3/build/Build/lib" )
+find_library( OPENMESHCORE_LIBS OpenMeshCore PATHS "~/OpenMesh-3.3/build/Build/lib" )
 find_package( Boost COMPONENTS program_options filesystem system REQUIRED )
 
 
 if(NOT DEFINED EIGEN3_INCLUDE_DIR)
   find_path(EIGEN3_INCLUDE_DIR eigen3)
 endif(NOT DEFINED EIGEN3_INCLUDE_DIR)
-set(OPENMESH_INCLUDE_DIR /home/northlight/libs/include)
+#	set(OPENMESH_INCLUDE_DIR ~/libs/include)
 #set(PATH_INCLUDE_OPENCV /usr/local/include )
 #SET(OpenCV_INSTALL_PATH /opt/opencv/release)
 
@@ -145,7 +145,6 @@ message(STATUS "CUDA_LIBRARY_DIRS = ${CUDA_LIBRARY_DIRS}")
 include_directories( ./include
                       /usr/include
                       /usr/local/include
-		      /usr/local/include/opencv2
                       ${OpenCV_INCLUDE_DIRS}
                       ${Boost_INCLUDE_DIRS}
                       ${EIGEN3_INCLUDE_DIR}
@@ -177,7 +176,7 @@ message(STATUS "PCL_LIBRARIES = ${PCL_LIBRARIES}")
 message(STATUS "PCL_COMPONENTS = ${PCL_COMPONENTS}")
 
 message(STATUS "D2CO_SRC = ${D2CO_SRC}")
-link_directories(/home/northlight/object_detection_app/lib)
+link_directories(~/object_detection_app/lib)
 link_directories(/opt/ros/kinetic/lib)
 ###create cv_ext library
 set(CV_EXT src/InteractiveMarkerRos.cpp src/opencv.cpp src/ros_publisher.cpp src/3d_shapes.cpp src/aligned_mat.cpp src/camera_calibration.cpp src/drawing.cpp src/hdr.cpp 
