@@ -135,8 +135,8 @@ int main(int argc, char **argv) {
 
     ros::init(argc, argv, "test_node_outside_catkin_ws");
     opencv oc;
-
-    oc.runopencv(); // create an image, it puts it in a directory by pushing space
+    cv::Rect roi;
+    oc.runopencv(roi); // create an image, it puts it in a directory by pushing space
     // after an object detection goes
     AppOptions options;
     // infill options
@@ -168,24 +168,23 @@ int main(int argc, char **argv) {
      *          to enable it
      */
     bool has_roi = false;
-    cv::Rect roi;
     // if was specify some roi
-    if (options.top_boundary != -1 || options.bottom_boundary != -1 ||
-            options.left_boundary != -1 || options.rigth_boundary != -1) {
-        //tl == top-left br == bottom-right
-        Point tl(0, 0), br(img_w, img_h);
+    //    if (options.top_boundary != -1 || options.bottom_boundary != -1 ||
+    //            options.left_boundary != -1 || options.rigth_boundary != -1) {
+    //        //tl == top-left br == bottom-right
+    //        Point tl(0, 0), br(img_w, img_h);
 
-        if (options.top_boundary != -1) tl.y = options.top_boundary;
-        if (options.left_boundary != -1) tl.x = options.left_boundary;
-        if (options.bottom_boundary != -1) br.y = options.bottom_boundary;
-        if (options.rigth_boundary != -1) br.x = options.rigth_boundary;
+    //        if (options.top_boundary != -1) tl.y = options.top_boundary;
+    //        if (options.left_boundary != -1) tl.x = options.left_boundary;
+    //        if (options.bottom_boundary != -1) br.y = options.bottom_boundary;
+    //        if (options.rigth_boundary != -1) br.x = options.rigth_boundary;
 
-        has_roi = true;
-        roi = cv::Rect(tl, br);
-        cam_model.setRegionOfInterest(roi);
-        cam_model.enableRegionOfInterest(true);
-        roi = cam_model.regionOfInterest();
-    }
+    has_roi = true;
+    //        roi = cv::Rect(tl, br);
+    cam_model.setRegionOfInterest(roi);
+    cam_model.enableRegionOfInterest(true);
+    roi = cam_model.regionOfInterest();
+    //    }
 
     cout << "Loading precomputed models from file : " << options.models_filename << endl;
     cout << "Loading camera parameters from file : " << options.camera_filename << endl;
@@ -332,7 +331,7 @@ int main(int argc, char **argv) {
 
         TemplateMatch first_match;
         // TAKE ONLY THE FIRST BEST MATCH 
-        for (auto iter = matches.begin(); iter != ++matches.begin(); iter++, i_m++) {
+        for (auto iter = matches.begin(); iter != matches.end(); iter++, i_m++) {
             TemplateMatch &match = *iter;
             //       cout<<match.img_offset<<" "<<match.distance<<endl;
 
@@ -355,12 +354,26 @@ int main(int argc, char **argv) {
             //            cv::Mat<double> t_vec(3,1);
             Eigen::Matrix<double, 3, 3> mat_to_rot;
 
-            Eigen::Matrix<double, 3, 3> mat_rot;
-            mat_rot = Eigen::AngleAxisd(-3.1415/2.0, Eigen::Vector3d::UnitZ())
+            // 0.3490658504 rad = 20 grads
+            // = 0.5235987756 rad = 30 grads
+            double errorY = -0.3490658504;
+            double errorZ = 0.5235987756;
+            Eigen::Matrix<double, 3, 3> mat_rot; // d2co to map 
+            mat_rot = Eigen::AngleAxisd(-3.1415 / 2.0, Eigen::Vector3d::UnitZ())
                     * Eigen::AngleAxisd(0, Eigen::Vector3d::UnitY())
                     * Eigen::AngleAxisd(3.1415, Eigen::Vector3d::UnitX());
+
+            Eigen::Matrix<double, 3, 3> error_rot; // fix error by calibration
+            error_rot = Eigen::AngleAxisd(0, Eigen::Vector3d::UnitZ())
+                    * Eigen::AngleAxisd(0, Eigen::Vector3d::UnitY())
+                    * Eigen::AngleAxisd(0.5235987756 / 2, Eigen::Vector3d::UnitX()); // 30 grads
+
+            Eigen::Matrix<double, 3, 3> error_rot2; // fix error by calibration
+            error_rot2 = Eigen::AngleAxisd(0, Eigen::Vector3d::UnitZ())
+                    * Eigen::AngleAxisd(0, Eigen::Vector3d::UnitY())
+                    * Eigen::AngleAxisd(-0.5235987756 / 2, Eigen::Vector3d::UnitX());
             cout << "ROTATION MATRIX AROUND Z IS" << mat_rot;
-            mat_to_rot = mat_rot * match.r_quat.toRotationMatrix();
+            mat_to_rot = error_rot * mat_rot * match.r_quat.toRotationMatrix();
             cout << "RESULTED MATRIX " << mat_to_rot;
             Eigen::Quaterniond rotated_quaternion(mat_to_rot);
 
@@ -378,8 +391,8 @@ int main(int argc, char **argv) {
             double yaw = 0.0732849;
             double pitch = 3.02223;
             double roll = 1.57988;
-            std::cout << "start: \n " << match.r_quat.toRotationMatrix().eulerAngles(2,1,0) << "DETECTED OBJECTS ORIENTATION. \n";
-            
+            std::cout << "start: \n " << match.r_quat.toRotationMatrix().eulerAngles(2, 1, 0) << "DETECTED OBJECTS ORIENTATION. \n";
+
             Eigen::Quaternion<double, Eigen::DontAlign> r_quat(0.0679299, -0.707034, 0.703714, 0.016597);
             //            
             //            r_quat = Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitX())
@@ -391,32 +404,28 @@ int main(int argc, char **argv) {
             std::cout << "Euler from quaternion in roll, pitch, yaw" << std::endl << euler << std::endl;
             proj.projectPoints(pts, project_real_pts);
             //            match.r_quat = r_quat;
-            Eigen::Vector3d t_vec2(match.t_vec);
-            t_vec2[2] = 0.17;
-            proj2.setTransformation(match.r_quat, t_vec2);
-            proj2.projectPoints(pts2, project_calibration_pts);
-
-            Point2f top_left(project_calibration_pts[0]);
-            Point2f top_right(project_calibration_pts[0]);
-            Point2f bottom_left(project_calibration_pts[0]);
-            Point2f bottom_right(project_calibration_pts[0]);
-            for (int i = 1; i < project_calibration_pts.size(); i++) { // go through all points and tl tr bl br buttons
-
-                if (project_calibration_pts.at(i).x < top_left.x && project_calibration_pts.at(i).y < top_left.y)
-                    top_left = project_calibration_pts.at(i);
-                if (project_calibration_pts.at(i).x > top_right.x && project_calibration_pts.at(i).y < top_left.y)
-                    top_right = project_calibration_pts.at(i);
-                if (project_calibration_pts.at(i).x < bottom_left.x && project_calibration_pts.at(i).y > bottom_left.y)
-                    bottom_left = project_calibration_pts.at(i);
-                if (project_calibration_pts.at(i).x > bottom_right.x && project_calibration_pts.at(i).y > bottom_right.y)
-                    bottom_right = project_calibration_pts.at(i);
-            }
+            //            Eigen::Vector3d t_vec2(match.t_vec);
+            //            t_vec2[2] = 0.17;
+            //            proj2.setTransformation(match.r_quat, t_vec2);
+            //            proj2.projectPoints(pts2, project_calibration_pts);
+            //
+            Point2f top_left(project_real_pts[0]);
+            Point2f top_right(project_real_pts[0]);
+            Point2f bottom_left(project_real_pts[0]);
+            Point2f bottom_right(project_real_pts[0]);
+            //            for (int i = 1; i < project_calibration_pts.size(); i++) { // go through all points and tl tr bl br buttons
+            //
+            //                if (project_calibration_pts.at(i).x < top_left.x && project_calibration_pts.at(i).y < top_left.y)
+            //                    top_left = project_calibration_pts.at(i);
+            //                if (project_calibration_pts.at(i).x > top_right.x && project_calibration_pts.at(i).y < top_left.y)
+            //                    top_right = project_calibration_pts.at(i);
+            //                if (project_calibration_pts.at(i).x < bottom_left.x && project_calibration_pts.at(i).y > bottom_left.y)
+            //                    bottom_left = project_calibration_pts.at(i);
+            //                if (project_calibration_pts.at(i).x > bottom_right.x && project_calibration_pts.at(i).y > bottom_right.y)
+            //                    bottom_right = project_calibration_pts.at(i);
+            //            }
 
             cv::Mat display = src_img.clone(), draw_img;
-            // points for ONE CAMERA MODEL
-            cv::Point pt1(top_left.x, top_left.y);
-            // and its bottom right corner.
-            cv::Point pt2(bottom_right.x, bottom_right.y);
 
             if (has_roi) {
                 cv::Point dbg_tl = roi.tl(), dbg_br = roi.br();
@@ -430,14 +439,18 @@ int main(int argc, char **argv) {
             } else
                 draw_img = display;
 
-            cv::rectangle(draw_img, pt1, pt2, cv::Scalar(0, 0, 255));
+
             // draw 2d points, Scalar is BGR 0 0 255 = red, second == green/ if match =red, else green
-            cv_ext::drawPoints(draw_img, project_calibration_pts, match.distance > options.match_threshold ? Scalar(0, 0, 255) : Scalar(0, 0, 255));
+            //   cv_ext::drawPoints(draw_img, project_calibration_pts, match.distance > options.match_threshold ? Scalar(0, 0, 255) : Scalar(0, 0, 255));
             // points for a DETECTED OBJECT
             top_left = project_real_pts[0];
             top_right = project_real_pts[0];
             bottom_left = project_real_pts[0];
             bottom_right = project_real_pts[0];
+            int x_sum = 0;
+            int y_sum = 0;
+
+            /////////////////////////////////// old version == top left == bottom right            
             for (int i = 1; i < project_real_pts.size(); i++) {
 
                 if (project_real_pts.at(i).x < top_left.x && project_real_pts.at(i).y < top_left.y)
@@ -449,14 +462,22 @@ int main(int argc, char **argv) {
                 if (project_real_pts.at(i).x > bottom_right.x && project_real_pts.at(i).y > bottom_right.y)
                     bottom_right = project_real_pts.at(i);
             }
+            for (int i = 0; i < project_real_pts.size(); i++) {
+                x_sum += project_real_pts[i].x;
+                y_sum += project_real_pts[i].y;
+            }
+            cv::Point centerOftheDetectedObject(roi.x + x_sum / project_real_pts.size(), roi.y + y_sum / project_real_pts.size());
+
+            ////////////////////////////////////
 
             cv::Point pt3(top_left.x, top_left.y);
             // and its bottom right corner.
             cv::Point pt4(bottom_right.x, bottom_right.y);
             int height_in_pixels = bottom_right.y - top_left.y;
             int width_in_pixels = bottom_right.x - top_left.x;
+            cv::rectangle(draw_img, pt3, pt4, cv::Scalar(0, 0, 255));
 
-            cv::Point centerOftheDetectedObject(top_left.x + width_in_pixels / 2, top_left.y + height_in_pixels / 2);
+            //            cv::Point centerOftheDetectedObject(roi.x + top_left.x + width_in_pixels / 2, roi.y + top_left.y + height_in_pixels / 2);
             Eigen::Vector3d distance_to_an_object_vector;
             Eigen::Vector3d distance_to_an_object_vector2;
             oc.getXYZD(centerOftheDetectedObject.x, centerOftheDetectedObject.y, distance_to_an_object_vector);
@@ -508,11 +529,12 @@ int main(int argc, char **argv) {
             cout << "calculated x width in pixel is: " << width_in_pixels << endl;
             cout << "distance to the object using one camera is " << distance_to_the_object_using_one_camera << endl;
             cout << "X and Y are " << X << ", " << Y << endl;
-            circle(display, centerOftheDetectedObject, 10, Scalar(0, 255, 0), 10);
+            //            circle(display, centerOftheDetectedObject, 10, Scalar(0, 255, 0), 10);
             if (oc.needToSave) oc.saveXYZD(centerOftheDetectedObject.x, centerOftheDetectedObject.y);
             cout << distance_to_an_object_vector[0] << " " << distance_to_an_object_vector[1] << " " << distance_to_an_object_vector[2] << " DISTANCE VECTOR \n";
             string text_about_distance_to_an_object = "The distance to the detected object: " + to_string(sqrt(distance_to_an_object_vector[0] * distance_to_an_object_vector[0] + distance_to_an_object_vector[1] * distance_to_an_object_vector[1] + distance_to_an_object_vector[2] * distance_to_an_object_vector[2]));
             cout << text_about_distance_to_an_object << endl;
+            circle(display, centerOftheDetectedObject, 2, Scalar(0, 0, 255), 5);
             cv::putText(display, //target image
                     text_about_distance_to_an_object.c_str(), //text
                     cv::Point(30, 100), //top-left position
@@ -528,61 +550,62 @@ int main(int argc, char **argv) {
                     0.5,
                     CV_RGB(162, 41, 162), //font color
                     1);
-            
+
             //SHOW DETECTED AN OBJECT LOCATION IN THE WORLD FRAME INSTEAD OF CAMERA
-              Eigen::Vector4d camera_coordinates_in_map;
-              camera_coordinates_in_map << 28, 0, 46, 1;
-              Eigen::Matrix3d d2co_orientation_in_map;// start orientation before applying founded euler angles
-              d2co_orientation_in_map <<
-                      0,-1,0,
-                      -1,0,0,
-                      0,0,-1
-                      ;
-               Eigen::Matrix4d camera_transformation_in_d2co; // from camera to d2co
-                            camera_transformation_in_d2co <<
-                      1,0,0,0,
-                      0,-1,0,0,
-                      0,0,-1,0,
-                      1,1,1,0
-                      ;
-                                                  ;
-               Eigen::Matrix4d camera_transformation_in_map; // from camera to d2co
-                            camera_transformation_in_map <<
-                      0,1,0,camera_coordinates_in_map(0),
-                     -1,0,0,camera_coordinates_in_map(1),
-                      0,0,1,camera_coordinates_in_map(2),
-                      1,1,1,0
-                      ;
-              Eigen::Vector4d detected_object_coordinates_in_map;
-              Eigen::Vector4d detected_object_coordinates_in_camera;
-              detected_object_coordinates_in_camera << distance_to_an_object_vector(0), distance_to_an_object_vector(1), distance_to_an_object_vector(2), 1;
-              Eigen::Matrix4d transformationD2coInMap;
-              transformationD2coInMap << d2co_orientation_in_map(0,0), d2co_orientation_in_map(0,1), d2co_orientation_in_map(0,2), camera_coordinates_in_map(0),
-              d2co_orientation_in_map(1,0), d2co_orientation_in_map(1,1), d2co_orientation_in_map(1,2), camera_coordinates_in_map(1),
-              d2co_orientation_in_map(2,0), d2co_orientation_in_map(2,1), d2co_orientation_in_map(2,2), camera_coordinates_in_map(2),
-              1, 1, 1, 0;
-              
-              
-              detected_object_coordinates_in_map = camera_transformation_in_map * detected_object_coordinates_in_camera; 
-              cout << detected_object_coordinates_in_map << ": COORDINATES OF DETECTED OBJECT IN WORLD FRAME " << endl;
-            ////// save XYZ AND orientation of the first match
-            if (iter == matches.begin()) {
-                q_of_the_first_match = rotated_quaternion;
-                
-                
-                cout << rotated_quaternion.toRotationMatrix().eulerAngles(2,1,0) << ": final angles \n";
-                position_of_the_first_match_in_world = detected_object_coordinates_in_map;
-                position_of_the_first_match_in_world[0]+=2;
-                position_of_the_first_match_in_world[1]-=2;
-                position_of_the_first_match_in_world[2]+=2;
-            }
+            Eigen::Vector4d camera_coordinates_in_map;
+            camera_coordinates_in_map << 28, 0, 46, 1;
+
+
+            Eigen::Matrix3d d2co_orientation_in_map; // start orientation before applying founded euler angles
+            d2co_orientation_in_map <<
+                    0, -1, 0,
+                    -1, 0, 0,
+                    0, 0, -1
+                    ;
+            Eigen::Matrix4d camera_transformation_in_d2co; // from camera to d2co
+            camera_transformation_in_d2co <<
+                    1, 0, 0, 0,
+                    0, -1, 0, 0,
+                    0, 0, -1, 0,
+                    1, 1, 1, 0
+                    ;
+            ;
+            Eigen::Matrix4d camera_transformation_in_map; // from camera to d2co
+            camera_transformation_in_map <<
+                    0, 1, 0, camera_coordinates_in_map(0),
+                    -1, 0, 0, camera_coordinates_in_map(1),
+                    0, 0, 1, camera_coordinates_in_map(2),
+                    1, 1, 1, 0
+                    ;
+
+            Eigen::Matrix4d camera_transformation_in_Reversedmap; // from camera to d2co
+            camera_transformation_in_Reversedmap <<
+                    0, 1, 0, -camera_coordinates_in_map(0),
+                    1, 0, 0, camera_coordinates_in_map(1),
+                    0, 0, -1, -camera_coordinates_in_map(2),
+                    1, 1, 1, 0
+                    ;
+
+            Eigen::Vector4d detected_object_coordinates_in_map;
+            Eigen::Vector4d detected_object_coordinates_in_reversed_map;
+            Eigen::Vector4d detected_object_coordinates_in_camera;
+            detected_object_coordinates_in_camera << distance_to_an_object_vector(0), distance_to_an_object_vector(1), distance_to_an_object_vector(2), 1;
+            Eigen::Matrix4d transformationD2coInMap;
+            transformationD2coInMap << d2co_orientation_in_map(0, 0), d2co_orientation_in_map(0, 1), d2co_orientation_in_map(0, 2), camera_coordinates_in_map(0),
+                    d2co_orientation_in_map(1, 0), d2co_orientation_in_map(1, 1), d2co_orientation_in_map(1, 2), camera_coordinates_in_map(1),
+                    d2co_orientation_in_map(2, 0), d2co_orientation_in_map(2, 1), d2co_orientation_in_map(2, 2), camera_coordinates_in_map(2),
+                    1, 1, 1, 0;
+
+            detected_object_coordinates_in_map = camera_transformation_in_map * detected_object_coordinates_in_camera;
+            detected_object_coordinates_in_reversed_map = camera_transformation_in_Reversedmap * detected_object_coordinates_in_camera;
+            cout << detected_object_coordinates_in_map << ": COORDINATES OF DETECTED OBJECT IN WORLD FRAME " << endl;
 
             if (!options.output_type.compare("VIDEO")) { // if video then display mat
                 std::string name_detected_obj = "detected_object";
-//                namedWindow(name_detected_obj, WINDOW_NORMAL);
-                                cv_ext::showImage(display, "display", true);
-//                cv::imshow(name_detected_obj, display);
-//                waitKey(0); // display while something is pushed
+                //                namedWindow(name_detected_obj, WINDOW_NORMAL);
+                cv_ext::showImage(display, "display", true);
+                //                cv::imshow(name_detected_obj, display);
+                //                waitKey(0); // display while something is pushed
             } else if (!options.output_type.compare("FILE")) {
                 size_t found = current_file.find_last_of("/");
                 string path = current_file.substr(0, found);
@@ -603,27 +626,49 @@ int main(int argc, char **argv) {
             } else {
                 cout << "Error: Unknown streaming type!" << endl;
             }
-
-            std::cout << text_about_about_should_program_run_farther;
-            char shouldIStartToSendDetectedObjectToRVIZ; /////////////////// END OF OBJECT DETECTION
-            std::cout << "Please enter [Y/N]: ";
-            std::cin >> shouldIStartToSendDetectedObjectToRVIZ;
-
-            shouldIStartToSendDetectedObjectToRVIZ = toupper(shouldIStartToSendDetectedObjectToRVIZ);
-
-            while (shouldIStartToSendDetectedObjectToRVIZ != 'Y' && shouldIStartToSendDetectedObjectToRVIZ != 'N') {
+            cout << rotated_quaternion.toRotationMatrix().eulerAngles(2, 1, 0) << ": final angles \n";
+            char modelWasChoosen = ' ';
+            while (modelWasChoosen != 'Y' && modelWasChoosen != 'N') {
                 std::cout << "Error invalid input please try again " << std::endl;
-                std::cout << "Please enter [Y/N]: ";
-                std::cin >> shouldIStartToSendDetectedObjectToRVIZ;
-                shouldIStartToSendDetectedObjectToRVIZ = toupper(shouldIStartToSendDetectedObjectToRVIZ);
+                std::cout << "Please enter [Y/N] if u want or not to select current model: ";
+                std::cin >> modelWasChoosen;
+                modelWasChoosen = toupper(modelWasChoosen);
+            }
+            std::cout << "u have pressed: " << modelWasChoosen;
+            ////// save XYZ AND orientation of the first match
+
+            if (modelWasChoosen == 'Y') {
+                q_of_the_first_match = rotated_quaternion;
+
+                cout << rotated_quaternion.toRotationMatrix().eulerAngles(2, 1, 0) << ": final angles \n";
+                position_of_the_first_match_in_world = detected_object_coordinates_in_map;
+                position_of_the_first_match_in_world[0] += 0;
+                position_of_the_first_match_in_world[1] += 1;
+                position_of_the_first_match_in_world[2] += 0;
             }
 
-            std::cout << "You entered " << shouldIStartToSendDetectedObjectToRVIZ << std::endl;
+            if (modelWasChoosen == 'Y') {
+                std::cout << text_about_about_should_program_run_farther;
+                char shouldIStartToSendDetectedObjectToRVIZ; /////////////////// END OF OBJECT DETECTION
+                std::cout << "Please enter [Y/N]: ";
+                std::cin >> shouldIStartToSendDetectedObjectToRVIZ;
 
-            if (shouldIStartToSendDetectedObjectToRVIZ == 'N') exit(0);
-            //send detected object location and point cloud data to rviz and if button pushed to client
-            if (shouldIStartToSendDetectedObjectToRVIZ == 'Y')
-                oc.runNode(argc, argv, position_of_the_first_match_in_world, q_of_the_first_match);
+                shouldIStartToSendDetectedObjectToRVIZ = toupper(shouldIStartToSendDetectedObjectToRVIZ);
+
+                while (shouldIStartToSendDetectedObjectToRVIZ != 'Y' && shouldIStartToSendDetectedObjectToRVIZ != 'N') {
+                    std::cout << "Error invalid input please try again " << std::endl;
+                    std::cout << "Please enter [Y/N]: ";
+                    std::cin >> shouldIStartToSendDetectedObjectToRVIZ;
+                    shouldIStartToSendDetectedObjectToRVIZ = toupper(shouldIStartToSendDetectedObjectToRVIZ);
+                }
+
+                std::cout << "You entered " << shouldIStartToSendDetectedObjectToRVIZ << std::endl;
+
+                if (shouldIStartToSendDetectedObjectToRVIZ == 'N') exit(0);
+                //send detected object location and point cloud data to rviz and if button pushed to client
+                if (shouldIStartToSendDetectedObjectToRVIZ == 'Y')
+                    oc.runNode(argc, argv, position_of_the_first_match_in_world, q_of_the_first_match);
+            }
         }
     }
     return 0;

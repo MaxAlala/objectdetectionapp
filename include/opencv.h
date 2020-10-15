@@ -36,20 +36,20 @@ using namespace dnn;
 class opencv {
 public:
     Camera zed;
-    
-//    /*!
-//     * \brief read point cloud from file 
-//     *
-//     */    
-//    void readPointCloud();
-//
-//    /*!
-//     * \brief save point cloud in the file 
-//     *
-//     */    
-//    void savePointCloud();
 
-    
+    //    /*!
+    //     * \brief read point cloud from file 
+    //     *
+    //     */    
+    //    void readPointCloud();
+    //
+    //    /*!
+    //     * \brief save point cloud in the file 
+    //     *
+    //     */    
+    //    void savePointCloud();
+
+
     void saveXYZD(int x, int y);
     /*!
      * \brief open zed camera, infill it with some parameters
@@ -76,15 +76,14 @@ public:
      * \brief this method detects objects and their coordinates in a given environment
      *
      */
-    void runopencv();
-
+    void runopencv(cv::Rect & rect);
     /*!
      * \brief this method converts sl matrix(ZED) to cv matrix(openCV)
      * \param[in] input this param represent an image
      */
     cv::Mat slMat2cvMat(sl::Mat& input);
 
-    
+
     void updatePointCloud();
     void sendPointCloud();
     /*!
@@ -92,26 +91,26 @@ public:
      */
     string type2str(int type);
     bool isInside(double circle_x, double circle_y, int rad, double x, double y);
-    
-    
-    
+
+
+
     void initNode(int argc, char** argv);
-    
+
     /*!
      * \brief create publisher to send detected position and orientation
      * alse create second publisher to send point cloud data
      *
-     */    
+     */
     void runNode(int argc, char** argv, Eigen::Vector4d& position_of_the_first_match, Eigen::Quaterniond& r_quat);
     void fromCMtoM(Eigen::Vector3d& vec);
     void rotateVector(int X_angle, int Y_angle, int Z_angle, Eigen::Vector3d& inputVector);
-    
+
     void change_fromKukaBox_to_Rviz_coordinate(std::vector<double>& position);
     void change_fromKukaBox_to_Rviz_coordinate(Eigen::Vector3d& position);
     void change_from_KukaBox_to_Rviz_coordinate(sl::float4& point3d);
     void change_from_Camera_to_KukaBox_coordinate(sl::float4& point3d);
     void change_pointCloud_from_Camera_to_Rviz_through_KukaBox_coordinate(sl::Mat& mat);
-    
+
     sl::Mat current_depth_map;
     sl::Mat current_point_cloud;
     sl::Mat updated_point_cloud;
@@ -125,10 +124,10 @@ public:
     ros::NodeHandle n;
     // node params
 
-    
+
 private:
     string absolutePath = "";
-    
+
 };
 
 #endif // OPENCV_H
