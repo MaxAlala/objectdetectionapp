@@ -34,7 +34,11 @@ extern Eigen::Vector3d g_position_of_the_first_match;
 extern Eigen::Quaterniond g_r_quat;
 extern Eigen::Quaterniond g_r_quat_tool;
 
-int createServerAndSendCoordinates() {
+
+/*!
+ * \brief it starts the client and sends tool coordinates and orientation
+ **/
+int createSocketClientAndSendToolCoordinatesOrientation() {
     /*
         C socket client example
      */
@@ -189,15 +193,21 @@ int createServerAndSendCoordinates() {
 
 }
 
+/*!
+ * \brief this function represents a reaction to "Yes" selection == u chose to send orientation and position to a robot
+ **/
 void graspObject(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback) {
     interactiveMarkerRos::shouldISendDetectedObject = 1;
     shouldISendDetectedObject2 = 34;
-    createServerAndSendCoordinates();
+    createSocketClientAndSendToolCoordinatesOrientation();
 
     ROS_INFO("You chose 'yes'.");
 
 }
 
+/*!
+ * \brief this function represents a reaction to "No" selection == u chose to not send orientation and position to a robot
+ **/
 void dontGraspObject(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback) {
     interactiveMarkerRos::shouldISendDetectedObject = 0;
     ROS_INFO("You chose 'no'.");

@@ -9,7 +9,21 @@
 
 #include "apps_utils.h"
 
-// program to generate a dataset for detect object app
+
+/**
+ * @file generate_models.cpp
+ * @brief in this application : 
+ * You create model data base changing an object orientation and position. Model data base file is consumed by detect_object application.
+ * Control:
+ * U O == Z 
+ * J K == X
+ * I M == Y
+ * R == show axis
+ * A S == rotation around Y
+ * W Z == rotation around X
+ * Q E == rotation around Z
+ */
+
 namespace po = boost::program_options;
 using namespace std;
 using namespace cv;
@@ -73,7 +87,7 @@ int main(int argc, char **argv) {
                     << endl << endl << desc;
             return 0;
         }
-        //put values from vm to references
+        //it puts values from vm to references
         po::notify(vm);
     } catch (boost::program_options::required_option& e) {
         cerr << "ERROR: " << e.what() << endl << endl;
@@ -110,7 +124,7 @@ int main(int argc, char **argv) {
 
         has_roi = true;
         roi = cv::Rect(tl, br);
-        // cut image using boundaries
+        // it cuts image using boundaries
         cam_model.setRegionOfInterest(roi);
         cam_model.enableRegionOfInterest(true);
         roi = cam_model.regionOfInterest();
@@ -156,7 +170,8 @@ int main(int argc, char **argv) {
     obj_model.setCamModel(cam_model);
     obj_model.setStepMeters(0.001);
     obj_model.setUnitOfMeasure(RasterObjectModel::MILLIMETER);
-    // download 3d model 
+    
+    // it downloads 3d model 
     if (!obj_model.setModelFile(model_filename))
         return -1;
 
@@ -165,13 +180,13 @@ int main(int argc, char **argv) {
 
 
     /*!
-     * \brief convert & display 3d to 2d image using openGL (updateRaster function is inside)
+     * \brief is converts & displays 3d to 2d image using openGL (updateRaster function is inside)
      * 
      * 
      *
      **/
     obj_model.computeRaster();
-    // add computed 3d points templates
+    //is adds computed 3d point templates
     obj_model.loadPrecomputedModelsViews(pre_models_filename);
 
     cv::Mat background_img;
@@ -320,9 +335,9 @@ int main(int argc, char **argv) {
         else
             draw_img = background;
 
-        // get 3d points for raster == edges only from some point of view
+        // it gets 3d points for rasterization == edges only from some point of view
         obj_model.projectRasterSegments(raster_segs);
-        // draw in 2d
+        // it draws in points of rasterization
         cv_ext::drawSegments(draw_img, raster_segs);
 
         if (draw_axis) {
@@ -330,7 +345,7 @@ int main(int argc, char **argv) {
             // get 3 vector 
             obj_model.projectAxes(proj_segs_x, proj_segs_y, proj_segs_z);
 
-            // draw them
+            // it draws axes
             cv_ext::drawSegments(draw_img, proj_segs_x, Scalar(0, 0, 255));
             cv_ext::drawSegments(draw_img, proj_segs_y, Scalar(0, 255, 0));
             cv_ext::drawSegments(draw_img, proj_segs_z, Scalar(255, 0, 0));

@@ -21,6 +21,20 @@ using namespace cv;
 using namespace dnn;
 using namespace std;
 
+/*!
+ * \brief position of the detected object
+ */
+Eigen::Vector3d g_position_of_the_first_match;
+
+/*!
+ * \brief orientation of the detected object
+ */
+Eigen::Quaterniond g_r_quat;
+
+/*!
+ * \brief orientation of the tool to grasp detected object
+ */
+Eigen::Quaterniond g_r_quat_tool;
 
 #define SSTR( x ) static_cast< std::ostringstream & >( \
 ( std::ostringstream() << std::dec << x ) ).str()
@@ -63,6 +77,9 @@ void onMouse(int event, int x, int y, int, void *data) {
     }
 }
 
+/*!
+ * \brief Method to select a ROI( rectangle area) using mouse.
+ */
 cv::Rect selectRect(cv::Mat image, cv::Scalar color = cv::Scalar(255, 0, 0), int thickness = 2) {
     const string window = "rect";
     SelectionState state;
@@ -83,172 +100,6 @@ cv::Rect selectRect(cv::Mat image, cv::Scalar color = cv::Scalar(255, 0, 0), int
     }
 
     return state.toRect();
-}
-
-///////////////////!!!!!!!!!!! old
-//using namespace visualization_msgs;
-//using namespace interactive_markers;
-//
-//boost::shared_ptr<InteractiveMarkerServer> server;
-//float marker_pos = 0;
-Eigen::Vector3d g_position_of_the_first_match;
-Eigen::Quaterniond g_r_quat;
-Eigen::Quaterniond g_r_quat_tool;
-//
-//MenuHandler menu_handler;
-//MenuHandler::EntryHandle h_first_entry;
-//MenuHandler::EntryHandle h_mode_last;
-//
-//
-//static bool shouldISendDetectedObject = 3;
-//
-//Marker makeBox(InteractiveMarker &msg) {
-//    Marker marker;
-//
-//    //  marker.type = visualization_msgs::Marker::MESH_RESOURCE;
-//    //  marker.mesh_resource = "package://using_markers/src/AX-01b_bearing_box.stl";
-//    //  marker.scale.x = msg.scale * 0.45;
-//    //  marker.scale.y = msg.scale * 0.45;
-//    //  marker.scale.z = msg.scale * 0.45;
-//    //  marker.color.r = 0.5;
-//    //  marker.color.g = 0.5;
-//    //  marker.color.b = 0.5;
-//    //  marker.color.a = 1.0;
-//    float scale = 1;
-//    marker.type = visualization_msgs::Marker::MESH_RESOURCE;
-//    marker.mesh_resource = "package://using_markers/src/AX-01b_bearing_box.stl";
-//    marker.scale.x = scale;
-//    marker.scale.y = scale;
-//    marker.scale.z = scale;
-//    marker.pose.position.x = g_position_of_the_first_match[0];
-//    marker.pose.position.y = g_position_of_the_first_match[1];
-//    marker.pose.position.z = g_position_of_the_first_match[2];
-//    marker.pose.orientation.x = g_r_quat.x();
-//    marker.pose.orientation.y = g_r_quat.y();
-//    marker.pose.orientation.z = g_r_quat.z();
-//    marker.pose.orientation.w = g_r_quat.w();
-//    marker.color.r = 153.0f;
-//    marker.color.g = 0.0f;
-//    marker.color.b = 153.0f;
-//    marker.color.a = 0.7;
-//    return marker;
-//}
-//
-//InteractiveMarkerControl& makeBoxControl(InteractiveMarker &msg) {
-//    InteractiveMarkerControl control;
-//    control.always_visible = true;
-//    control.markers.push_back(makeBox(msg));
-//    msg.controls.push_back(control);
-//
-//    return msg.controls.back();
-//}
-//
-//InteractiveMarker makeEmptyMarker(bool dummyBox = true) {
-//    InteractiveMarker int_marker;
-//    int_marker.header.frame_id = "map";
-//    int_marker.pose.position.y = -3.0 * marker_pos++;
-//    ;
-//    int_marker.scale = 1;
-//
-//    return int_marker;
-//}
-//
-//void makeMenuMarker(std::string name) {
-//    InteractiveMarker int_marker = makeEmptyMarker();
-//    int_marker.name = name;
-//
-//    InteractiveMarkerControl control;
-//
-//    control.interaction_mode = InteractiveMarkerControl::BUTTON;
-//    control.always_visible = true;
-//
-//    control.markers.push_back(makeBox(int_marker));
-//    int_marker.controls.push_back(control);
-//
-//    server->insert(int_marker);
-//}
-//
-//void graspObject(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback) {
-//    shouldISendDetectedObject = 1;
-//    //  shouldISendDetectedObject2 = 34;
-//
-//    ROS_INFO("You chose 'yes'.");
-//
-//}
-//
-//void dontGraspObject(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback) {
-//    shouldISendDetectedObject = 0;
-//    ROS_INFO("You chose 'no'.");
-//}
-//
-//void initMenu() {
-//    h_first_entry = menu_handler.insert("should i pick detected object up?");
-//    MenuHandler::EntryHandle entry = menu_handler.insert(h_first_entry, "yes", &graspObject);
-//    entry = menu_handler.insert(h_first_entry, "no", &dontGraspObject);
-//}
-
-///////////////////!!!!!!!!!!!
-
-void opencv::change_from_Camera_to_KukaBox_coordinate(sl::float4& point3d) {
-    double y_rad = -M_PI;
-
-    // -1 0 0 cam in KukaBox
-    // 0 0 -1
-    // 0 -1 0
-    Eigen::Matrix3d matY;
-    matY << cos(y_rad), 0, sin(y_rad),
-            0, 1, 0,
-            -sin(y_rad), 0, cos(y_rad);
-    Eigen::Matrix3d matX;
-    double x_rad = 0.5 * M_PI;
-    matX << 1, 0, 0,
-            0, cos(x_rad), -sin(x_rad),
-            0, sin(x_rad), cos(x_rad);
-    Eigen::Vector3d pointInKukaBox;
-    pointInKukaBox[0] = point3d[0];
-    pointInKukaBox[1] = point3d[1];
-    pointInKukaBox[2] = point3d[2];
-
-    pointInKukaBox = matY * matX * pointInKukaBox;
-
-    point3d[0] = pointInKukaBox[0];
-    point3d[1] = pointInKukaBox[1];
-    point3d[2] = pointInKukaBox[2];
-}
-
-void opencv::change_from_KukaBox_to_Rviz_coordinate(sl::float4& point3d) {
-
-    double xsaver = point3d[0]; //save x
-    point3d[0] = point3d[1];
-    point3d[2] = -point3d[2];
-    point3d[1] = xsaver;
-}
-
-void opencv::change_pointCloud_from_Camera_to_Rviz_through_KukaBox_coordinate(sl::Mat& mat) {
-    for (int i = 0; i < current_point_cloud.getWidth(); i++)
-        for (int j = 0; j < current_point_cloud.getHeight(); j++) {
-            sl::float4 point3d;
-            current_point_cloud.getValue(i, j, &point3d);
-            opencv::change_from_Camera_to_KukaBox_coordinate(point3d);
-            opencv::change_from_KukaBox_to_Rviz_coordinate(point3d);
-            //            current_point_cloud.setValue(i, j, &point3d);
-
-        }
-}
-
-void opencv::change_fromKukaBox_to_Rviz_coordinate(std::vector<double>& position) {
-
-    double xsaver = position[0]; //save x
-    position[0] = position[1];
-    position[2] = -position[2];
-    position[1] = xsaver;
-}
-
-void opencv::change_fromKukaBox_to_Rviz_coordinate(Eigen::Vector3d& position) {
-    double xsaver = position[0]; //save x
-    position[0] = position[1];
-    position[2] = -position[2];
-    position[1] = xsaver;
 }
 
 void opencv::updatePointCloud() {
@@ -282,33 +133,24 @@ void opencv::fromCMtoM(Eigen::Vector3d& vec) {
         vec[i] /= 100;
 }
 
-
-
-//cout << "detected object corientation in Rotation Matrix form: " << r_quat.toRotationMatrix() << endl;
-//    //    double Z = acos(r_quat.toRotationMatrix()(0,2));
-//    double Y = 3.1415;
-//    double angleBetweenZaxises = acos(r_quat.toRotationMatrix()(2, 2));
-//    if (angleBetweenZaxises < 0) Y = -angleBetweenZaxises;
-//    else Y = Y - angleBetweenZaxises;
-//
-//    //    double zz = r_quat.toRotationMatrix()(2,2);
-//    //    double A_tool = acos(zz);
-//    //    double B_tool = acos(zy);
-//    //    double C_tool = acos(zx);
-
-// it sends data about an detected object to RVIZ or goes back
-
+/*!
+ * \brief it sends 2 markers & point cloud to RVIZ also creates a tool orientation for server
+ **/
 void opencv::runNode(int argc, char** argv, Eigen::Vector4d& position_of_the_first_match, Eigen::Quaterniond& r_quat) {
 
-    cout << "detected object corientation in Rotation Matrix form: " << r_quat.toRotationMatrix() << endl;
+    cout << "detected object orientation in rotation matrix form: " << r_quat.toRotationMatrix() << endl;
     //    double Z = acos(r_quat.toRotationMatrix()(0,2));
     double X = 3.1415;
+    // every value of rotation matrix is dot product of two axes
+    // ZYX are map axes, Z_1 Y_1 X_1 are detected object axes.
     double DotProductZ_Z1 = r_quat.toRotationMatrix()(2, 2);
     double DotProductZ_Y1 = r_quat.toRotationMatrix()(2, 1);
     double DotProductX_X1 = r_quat.toRotationMatrix()(0, 0);
+
     cout << "DOT PRODUCT OF Z1_Z IS: " << DotProductZ_Z1 << endl;
     cout << "DOT PRODUCT OF Z1_Y IS: " << DotProductZ_Y1 << endl;
     cout << "DOT PRODUCT OF X1_X IS: " << DotProductX_X1 << endl;
+
     double angleBetweenZaxises = acos(DotProductZ_Z1);
     double angleBetweenY1_Zaxises = acos(DotProductZ_Y1);
 
@@ -316,113 +158,125 @@ void opencv::runNode(int argc, char** argv, Eigen::Vector4d& position_of_the_fir
     cout << "ANGLE OF DOT PRODUCT Y1_Z is: " << angleBetweenY1_Zaxises;
     angleBetweenZaxises = abs(angleBetweenZaxises); // in case an angle is negative
 
+Idea how to find tool orientation using detected object orientation:  
+
+// Robot tool orientation is expressed in map frame. So detected object orientation also expressed   
+// in map frame.  
+  // here is our goal to find out an angle to rotate the tool to grasp the detected object  
+    // 1) we suppose that tool has the same orientation as the detected object, for example, this is our object and its XZ axes  
+    //  ^ Z  
+    //  |  
+    //  ------------  
+    //  |          |  
+    //  ------------ ------> X  
+    // To grasp an object we need to orient our tool so that it was directed toward our object and  the grasping gap of the tool was directed rightly  
+    // |-----|  
+    // |  _  |*X == X axis directed toward us  
+    // |_| |_| this is our tool   
+    // |  
+    // |  
+    // |  
+    // \/ Z  
+    // 2) as we can see, our single goal to make tool Z be directed in opposite direction to Z of the object, and then a tool  
+    // will easily grasp a detected object  
+    // so we can find the angle between Z and tool's Z_1 using dot product from a rotation matrix  
+    // and we will rotate this angle around X-axis so our Z & Z_1 will be directed in the opposite directions.  
+    // 3) final thing to do is to define the sign of angle between Z and Z_1 to rotate around X  
+    // We can define it with respect to Y1_Z, if the dot product is less then zero then we change   sign, else do nothing  
+    // 4) Tool orientation is ready.  
+            
+            
     if (DotProductZ_Z1 < 0) X = angleBetweenZaxises;
     else X = X - angleBetweenZaxises; // 180 - a
     if (DotProductZ_Y1 < 0) X = -X;
     else X = X;
-    //    double zz = r_quat.toRotationMatrix()(2,2);
-    //    double A_tool = acos(zz);
-    //    double B_tool = acos(zy);
-    //    double C_tool = acos(zx);
 
-    //    cout << "ROTATION AROUND Z, Y:" << Z << " " << Y << endl; 
-    //    cout << "ROTATION AROUND X(final grads): " << angleBetweenZaxises << endl;
     cout << "ROTATION AROUND X( final rads): " << X << endl;
 
-    Eigen::Matrix3d d2co_orientation_in_map; // start orientation before applying founded euler angles
+    Eigen::Matrix3d R_d2co_in_map; // start orientation before applying founded euler angles
+
+    // it moves an object in z direction for better final position
     int z_movement = -2;
-    Eigen::Matrix4d minus_z_detected_object_frame;
-    minus_z_detected_object_frame <<
+
+    // it moves an object in z direction for better final position
+    Eigen::Matrix4d T_minus_z_detObject_in_detObject;
+    T_minus_z_detObject_in_detObject <<
             1, 0, 0, 0,
             0, 1, 0, 0,
             0, 0, 1, z_movement,
             0, 0, 0, 1
             ;
-    Eigen::Matrix4d minus_z_detected_object_frame_in_world;
-    Eigen::Matrix4d detected_object_frame_in_world;
-    Eigen::Matrix3d R1_0 = r_quat.toRotationMatrix();
-    detected_object_frame_in_world <<
-            R1_0(0, 0), R1_0(0, 1), R1_0(0, 2), position_of_the_first_match[0],
-            R1_0(1, 0), R1_0(1, 1), R1_0(1, 2), position_of_the_first_match[1],
-            R1_0(2, 0), R1_0(2, 1), R1_0(2, 2), position_of_the_first_match[2],
+
+    Eigen::Matrix4d T_minus_z_detObject_in_map;
+    Eigen::Matrix4d T_detObject_in_map;
+    Eigen::Matrix3d R_detObject_in_map = r_quat.toRotationMatrix();
+    T_detObject_in_map <<
+            R_detObject_in_map(0, 0), R_detObject_in_map(0, 1), R_detObject_in_map(0, 2), position_of_the_first_match[0],
+            R_detObject_in_map(1, 0), R_detObject_in_map(1, 1), R_detObject_in_map(1, 2), position_of_the_first_match[1],
+            R_detObject_in_map(2, 0), R_detObject_in_map(2, 1), R_detObject_in_map(2, 2), position_of_the_first_match[2],
             0, 0, 0, 1
             ;
 
-    minus_z_detected_object_frame_in_world = detected_object_frame_in_world * minus_z_detected_object_frame;
-    Eigen::Matrix3d detectedObjectOrientation;
-    detectedObjectOrientation <<
-            minus_z_detected_object_frame_in_world(0, 0), minus_z_detected_object_frame_in_world(0, 1), minus_z_detected_object_frame_in_world(0, 2),
-            minus_z_detected_object_frame_in_world(1, 0), minus_z_detected_object_frame_in_world(1, 1), minus_z_detected_object_frame_in_world(1, 2),
-            minus_z_detected_object_frame_in_world(2, 0), minus_z_detected_object_frame_in_world(2, 1), minus_z_detected_object_frame_in_world(2, 2);
-    Eigen::Vector4d detectedObjectPosition;
-    detectedObjectPosition << minus_z_detected_object_frame_in_world(0, 3), minus_z_detected_object_frame_in_world(1, 3), minus_z_detected_object_frame_in_world(2, 3), 0;
-    d2co_orientation_in_map <<
+    T_minus_z_detObject_in_map = T_detObject_in_map * T_minus_z_detObject_in_detObject;
+    Eigen::Matrix3d R_minus_z_detObject_in_map;
+    R_minus_z_detObject_in_map <<
+            T_minus_z_detObject_in_map(0, 0), T_minus_z_detObject_in_map(0, 1), T_minus_z_detObject_in_map(0, 2),
+            T_minus_z_detObject_in_map(1, 0), T_minus_z_detObject_in_map(1, 1), T_minus_z_detObject_in_map(1, 2),
+            T_minus_z_detObject_in_map(2, 0), T_minus_z_detObject_in_map(2, 1), T_minus_z_detObject_in_map(2, 2);
+    Eigen::Vector4d P_minus_z_detObject_in_map;
+    P_minus_z_detObject_in_map << T_minus_z_detObject_in_map(0, 3), T_minus_z_detObject_in_map(1, 3), T_minus_z_detObject_in_map(2, 3), 0;
+    R_d2co_in_map <<
             0, -1, 0,
             -1, 0, 0,
             0, 0, -1
             ;
     cout << "DETECTED OBJECT POSITION: \n";
-    cout << detectedObjectPosition << endl;
+    cout << P_minus_z_detObject_in_map << endl;
     //-3.1415 / 2
-    Eigen::Matrix<double, 3, 3> R2_1; // fix error by calibration
 
-    //MAIN IDEA R1_0 == detected object frame in robot base frame
-    // R2_1 == frame same as R1_0 == I matrix, but rotated around Y so tool has orientation to grasp the object.
+    Eigen::Matrix<double, 3, 3> indentityMatrix;
 
-    Eigen::Matrix<double, 3, 3> tool_rotation; // fix error by calibration
-    tool_rotation = Eigen::AngleAxisd(0, Eigen::Vector3d::UnitZ())
+    //rotation around X
+    Eigen::Matrix<double, 3, 3> rotation_around_X;
+    rotation_around_X = Eigen::AngleAxisd(0, Eigen::Vector3d::UnitZ())
             * Eigen::AngleAxisd(0, Eigen::Vector3d::UnitY())
             * Eigen::AngleAxisd(X, Eigen::Vector3d::UnitX());
 
-    R2_1 <<
+    indentityMatrix <<
             1, 0, 0, 0, 1, 0, 0, 0, 1;
 
-    R2_1 = tool_rotation * R2_1;
+    indentityMatrix = rotation_around_X * indentityMatrix;
 
-    Eigen::Matrix<double, 3, 3> tool_orientation; // fix error by calibration
+    // tool orientation
+    Eigen::Matrix<double, 3, 3> R_tool_in_map;
     Eigen::Vector3d eulerAngs = r_quat.toRotationMatrix().eulerAngles(2, 1, 0);
 
-    //    tool_orientation = r_quat.toRotationMatrix() * R2_1;
-    tool_orientation = detectedObjectOrientation * R2_1;
-    Eigen::Quaterniond detectedObjectOrientation_quat(detectedObjectOrientation);
-    Eigen::Matrix<double, 3, 3> tool_rotation2; // fix error by calibration
-    tool_rotation2 = Eigen::AngleAxisd(eulerAngs[0], Eigen::Vector3d::UnitZ())
-            * Eigen::AngleAxisd(eulerAngs[1] + X, Eigen::Vector3d::UnitY())
-            * Eigen::AngleAxisd(eulerAngs[2], Eigen::Vector3d::UnitX());
-    //    for (int i = 0; i < 3; i++)
-    //        g_position_of_the_first_match[i] = position_of_the_first_match[i];
-    //
-    //    g_r_quat.x() = r_quat.x();
-    //    g_r_quat.y() = r_quat.y();
-    //    g_r_quat.w() = r_quat.w();
-    //    g_r_quat.z() = r_quat.z();
+
+    R_tool_in_map = R_minus_z_detObject_in_map * indentityMatrix;
+    Eigen::Quaterniond detectedObjectOrientation_quat(R_minus_z_detObject_in_map);
 
     for (int i = 0; i < 3; i++)
-        g_position_of_the_first_match[i] = detectedObjectPosition[i];
+        g_position_of_the_first_match[i] = P_minus_z_detObject_in_map[i];
 
     g_r_quat.x() = detectedObjectOrientation_quat.x();
     g_r_quat.y() = detectedObjectOrientation_quat.y();
     g_r_quat.w() = detectedObjectOrientation_quat.w();
     g_r_quat.z() = detectedObjectOrientation_quat.z();
 
+    g_r_quat_tool = Eigen::Quaterniond(R_tool_in_map);
 
-
-    g_r_quat_tool = Eigen::Quaterniond(tool_orientation);
-
-    //    fromCMtoM(position_of_the_first_match);
-    //    change_fromKukaBox_to_Rviz_coordinate(position_of_the_first_match);
     ROS_INFO("It worked!");
     ros::Rate r(1);
 
-    //publish detected object 
+    //it publishes detected object to ROS topic
     ros::Publisher marker_pub = n.advertise<visualization_msgs::Marker>("visualization_marker", 1);
     //    sendPointCloud();
-    // Set our initial shape type to be a cube
+    // it sett our initial shape type to be a cube
     uint32_t shape = visualization_msgs::Marker::CUBE;
-    //////////////////////////////////////////
+    // pointcloud publisher
     ros::Publisher mPubCloud;
 
-    // publish point cloud 
+    // it publishes a point cloud 
     mPubCloud = n.advertise<sensor_msgs::PointCloud2>("pointcloud", 1);
     ////
     int mCamWidth = zed.getCameraInformation().camera_configuration.resolution.width;
@@ -455,90 +309,43 @@ void opencv::runNode(int argc, char** argv, Eigen::Vector4d& position_of_the_fir
     memcpy(ptCloudPtr, (float*) cpu_cloud, 4 * ptsCount * sizeof (float));
     cout << "settings for point cloud are finished. \n " << current_point_cloud.getHeight() << "point cloud height . \n";
 
-    //////////////////////////////////////
-
     while (ros::ok()) {
         const int size = 2;
         visualization_msgs::Marker markers[size];
-        // print text
-        //        for (int i = 0; i < size; i++) {
-        //            // Set the frame ID and timestamp.  See the TF tutorials for information on these.
-        //            markers[i].header.frame_id = "/camera";
-        //            markers[i].header.stamp = ros::Time::now();
-        //
-        //            // Set the namespace and id for this marker.  This serves to create a unique ID
-        //            // Any marker sent with the same namespace and id will overwrite the old one
-        //            markers[i].ns = "basic_shapes";
-        //            markers[i].id = i;
-        //
-        //
-        //            // Set the marker type.  Initially this is CUBE, and cycles between that and SPHERE, ARROW, and CYLINDER
-        //            markers[i].type = visualization_msgs::Marker::TEXT_VIEW_FACING;
-        //
-        //            // Set the marker action.  Options are ADD, DELETE, and new in ROS Indigo: 3 (DELETEALL)
-        //            markers[i].action = visualization_msgs::Marker::ADD;
-        //
-        //            // Set the pose of the marker.  This is a full 6DOF pose relative to the frame/time specified in the header
-        //
-        //            markers[i].pose.position.x = position_of_the_first_match[0];
-        //            markers[i].pose.position.y = position_of_the_first_match[1];
-        //            markers[i].pose.position.z = position_of_the_first_match[2];
-        //
-        //            markers[i].pose.orientation.x = r_quat.x();
-        //            markers[i].pose.orientation.y = r_quat.y();
-        //            markers[i].pose.orientation.z = r_quat.z();
-        //            markers[i].pose.orientation.w = r_quat.w();
-        //            // Set the scale of the marker -- 1x1x1 here means 1m on a side
-        //
-        //            markers[i].scale.x = 5;
-        //            markers[i].scale.y = 5;
-        //            markers[i].scale.z = 5;
-        //
-        //            // Set the color -- be sure to set alpha to something non-zero!
-        //            markers[i].color.r = 153.0f;
-        //            markers[i].color.g = 0.0f;
-        //            markers[i].color.b = 153.0f;
-        //            markers[i].color.a = 0.7;
-        //            markers[i].lifetime = ros::Duration();
-        //
-        //        }
 
-        /////////////// old
         for (int i = 0; i < size; i++) {
-            //            // Set the frame ID and timestamp.  See the TF tutorials for information on these.
+            // it sets the frame ID and timestamp.  See the TF tutorials for information on these.
             markers[i].header.frame_id = "map";
             markers[i].header.stamp = ros::Time::now();
 
-            //            // Set the namespace and id for this marker.  This serves to create a unique ID
-            //            // Any marker sent with the same namespace and id will overwrite the old one
+            // it sets the namespace and id for this marker.  This serves to create a unique ID
+            // any marker sent with the same namespace and id will overwrite the old one
             markers[i].ns = "basic_shapes";
             markers[i].id = i;
-            //
-            //
-            //            // Set the marker type.  Initially this is CUBE, and cycles between that and SPHERE, ARROW, and CYLINDER
+
+            // it sets the marker type.  Initially this is CUBE, and cycles between that and SPHERE, ARROW, and CYLINDER
             if (i % 2 == 0) markers[i].type = visualization_msgs::Marker::MESH_RESOURCE;
             else
                 markers[i].type = visualization_msgs::Marker::TEXT_VIEW_FACING;
             //
-            //            // Set the marker action.  Options are ADD, DELETE, and new in ROS Indigo: 3 (DELETEALL)
+            //it sets the marker action.  Options are ADD, DELETE, and new in ROS Indigo: 3 (DELETEALL)
             markers[i].action = visualization_msgs::Marker::ADD;
-            //
-            //            // Set the pose of the marker.  This is a full 6DOF pose relative to the frame/time specified in the header
+            //it sets the pose of the marker.  This is a full 6DOF pose relative to the frame/time specified in the header
             if (i % 2 == 0) {
-                markers[i].pose.position.x = detectedObjectPosition[0];
-                markers[i].pose.position.y = detectedObjectPosition[1];
-                markers[i].pose.position.z = detectedObjectPosition[2];
+                markers[i].pose.position.x = P_minus_z_detObject_in_map[0];
+                markers[i].pose.position.y = P_minus_z_detObject_in_map[1];
+                markers[i].pose.position.z = P_minus_z_detObject_in_map[2];
             } else {
-                markers[i].pose.position.x = detectedObjectPosition[0];
-                markers[i].pose.position.y = detectedObjectPosition[1];
-                markers[i].pose.position.z = detectedObjectPosition[2] + 10;
+                markers[i].pose.position.x = P_minus_z_detObject_in_map[0];
+                markers[i].pose.position.y = P_minus_z_detObject_in_map[1];
+                markers[i].pose.position.z = P_minus_z_detObject_in_map[2] + 10;
             }
 
             markers[i].pose.orientation.x = r_quat.x();
             markers[i].pose.orientation.y = r_quat.y();
             markers[i].pose.orientation.z = r_quat.z();
             markers[i].pose.orientation.w = r_quat.w();
-            // Set the scale of the marker -- 1x1x1 here means 1m on a side
+            // it sets the scale of the marker -- 1x1x1 here means 1m on a side
             if (i % 2 == 0) {
                 float scale = 0.1;
                 markers[i].scale.x = scale;
@@ -551,7 +358,7 @@ void opencv::runNode(int argc, char** argv, Eigen::Vector4d& position_of_the_fir
                 markers[i].scale.z = 5;
 
             }
-            // Set the color -- be sure to set alpha to something non-zero!
+            // it sets the color -- be sure to set alpha to something non-zero!
             markers[i].color.r = 153.0f;
             markers[i].color.g = 0.0f;
             markers[i].color.b = 153.0f;
@@ -562,7 +369,7 @@ void opencv::runNode(int argc, char** argv, Eigen::Vector4d& position_of_the_fir
             markers[i].lifetime = ros::Duration();
         }
 
-        // Publish the marker
+        // it publishes the marker
         while (marker_pub.getNumSubscribers() < 1) {
             if (!ros::ok()) {
                 break;
@@ -577,37 +384,15 @@ void opencv::runNode(int argc, char** argv, Eigen::Vector4d& position_of_the_fir
         mPubCloud.publish(pointcloudMsg);
         cout << "after sending. \n ";
         r.sleep();
+        // it creates another marker - interactive to have ability to chose option - to start the server
         InteractiveMarkerRos interactiveMarker(g_position_of_the_first_match, r_quat);
         interactiveMarker.server.reset(new InteractiveMarkerServer("test_node_outside_catkin_ws", "", false));
         interactiveMarker.initMenu();
         interactiveMarker.makeMenuMarker("objectPicker");
-        //        cout << "1_1";
         interactiveMarker.menu_handler.apply(*interactiveMarker.server, "objectPicker");
-        //        cout << "1_2";
         interactiveMarker.server->applyChanges();
-        //        cout << "1_3";
-
-        //        cout << "2";
         ros::spin();
-        //        cout << "3";
         interactiveMarker.server.reset();
-        //        cout << "4";
-        ////////////////// old working code
-        //        server.reset(new InteractiveMarkerServer("menu", "", false));
-        //
-        //        initMenu();
-        //
-        //        makeMenuMarker("objectPicker");
-        //        //  makeMenuMarker( "marker2" );
-        //
-        //        menu_handler.apply(*server, "objectPicker");
-        //        //  menu_handler.apply( *server, "marker2" );
-        //        server->applyChanges();
-        //
-        //        ros::spin();
-        //
-        //        server.reset();
-
         r.sleep();
         if (interactiveMarkerRos::shouldISendDetectedObject == 1) std::cout << "start sending a data to robot... \n";
         if (interactiveMarkerRos::shouldISendDetectedObject == 0) {
@@ -655,10 +440,6 @@ void opencv::runNode(int argc, char** argv, Eigen::Vector4d& position_of_the_fir
 ////    
 //    file_obj.close();
 //}
-
-void opencv::sendPointCloud() {
-
-}
 
 opencv::opencv() {
     //    VideoCapture cap;
@@ -725,8 +506,7 @@ void opencv::saveXYZD(int x, int y) {
 }
 
 /*!
- * \brief this method detects objects and their coordinates in a given environment
- *
+ * \brief it saves a chosen image and changes ROI 
  */
 void opencv::runopencv(cv::Rect & rect) {
 
@@ -744,7 +524,7 @@ void opencv::runopencv(cv::Rect & rect) {
         sl::Mat image_zed(zed.getCameraInformation().camera_resolution, MAT_TYPE::U8_C4);
         if (zed.grab() == ERROR_CODE::SUCCESS) {
 
-            zed.retrieveImage(image_zed, VIEW::LEFT); // Get the left image
+            zed.retrieveImage(image_zed, VIEW::LEFT); // it gets the left image of ZED stereo camera
 
         }
 
@@ -752,34 +532,30 @@ void opencv::runopencv(cv::Rect & rect) {
 
         cvtColor(current_image_cv, current_image_grayscale_cv, cv::COLOR_BGR2GRAY);
 
-        imshow(kWinName, current_image_grayscale_cv); // display a gray image
+        imshow(kWinName, current_image_grayscale_cv); // it displays a gray image
 
-
-        if (waitKey(30) == 32) // to save an image + create a point cloud == space 
+        if (waitKey(30) == 32) // it saves an image + creates a point cloud then SPACE is pushed
         {
 
-            //            zed.retrieveMeasure(current_depth_map, MEASURE::DEPTH); // Retrieve depth
             opencv::updatePointCloud();
-            //            change_pointCloud_from_Camera_to_Rviz_through_KukaBox_coordinate(current_point_cloud);
 
-            needToSave = true; // if current_point_cloud != null
+            needToSaveAChosenImage = true;
             rect = selectRect(current_image_cv);
             cout << current_image_cv.size() << endl;
-            // Define initial bounding box 
-            //    Rect2d bbox(287, 23, 86, 320); 
 
-            // Uncomment the line below to select a different bounding box 
-            // bbox = selectROI(frame, false); 
-            // Display bounding box. 
+            // it displays selected ROI
             rectangle(current_image_cv, rect, Scalar(255, 0, 0), 2, 1);
-            //            savePointCloud();
-            // retrieve point cloud
-            //            cout << current_point_cloud.
-            imshow(kWinName, current_image_cv); // display a gray image
+
+            // it displays a gray image
+            imshow(kWinName, current_image_cv);
+
+            // it saves grayscale image for object detection
             imwrite("saved_images/image.png", current_image_grayscale_cv);
-            waitKey(0); // display while something is pushed
+
+            // then SPACE is pushed it returns to the image selection
+            waitKey(0);
         }
-        if (waitKey(30) == 27)// push esc to finish 
+        if (waitKey(30) == 27)// push ESC to finish image selection & to start object detection algorithm
         {
             should_video_stream_run = false;
         }
@@ -834,7 +610,7 @@ cv::Mat opencv::slMat2cvMat(sl::Mat & input) {
 }
 
 /*!
- * \brief this method changes format or type  of the number
+ * \brief this method changes format or type of the number
  */
 string opencv::type2str(int type) {
     string r;
