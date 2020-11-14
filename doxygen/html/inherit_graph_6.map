@@ -1,0 +1,5 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$classcv__ext_1_1HDR.html" title="Abstract base class for High Dynamic Range Imaging classes. Any class inheriting from HDR must provid..." alt="" coords="5,46,197,73"/>
+<area shape="rect" id="node2" href="$classcv__ext_1_1DebevecHDR.html" title="Implementation of the algorithm presented in: " alt="" coords="245,5,396,47"/>
+<area shape="rect" id="node3" href="$classcv__ext_1_1MertensHDR.html" title="Implementation of the algorithm presented in: " alt="" coords="247,71,394,112"/>
+</map>

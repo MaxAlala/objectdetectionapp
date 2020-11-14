@@ -1,0 +1,11 @@
+<map id="TemplateMatching" name="TemplateMatching">
+<area shape="rect" id="node2" href="$classBidirectionalChamferMatching.html" title="BidirectionalChamferMatching" alt="" coords="190,5,386,32"/>
+<area shape="rect" id="node3" href="$classChamferMatching.html" title="ChamferMatching" alt="" coords="225,56,351,83"/>
+<area shape="rect" id="node4" href="$classDirectionalChamferMatching.html" title="DirectionalChamferMatching" alt="" coords="195,107,381,133"/>
+<area shape="rect" id="node5" href="$classDirectMatching.html" title="DirectMatching" alt="" coords="233,157,343,184"/>
+<area shape="rect" id="node6" href="$classHybridDirectionalChamferMatching.html" title="HybridDirectionalChamfer\lMatching" alt="" coords="202,209,374,250"/>
+<area shape="rect" id="node7" href="$classICPChamferMatching.html" title="ICPChamferMatching" alt="" coords="214,275,362,301"/>
+<area shape="rect" id="node8" href="$classICPDirectionalChamferMatching.html" title="ICPDirectionalChamferMatching" alt="" coords="183,325,393,352"/>
+<area shape="rect" id="node9" href="$classMultiViewsDirectionalChamferMatching.html" title="MultiViewsDirectionalChamfer\lMatching" alt="" coords="189,377,387,418"/>
+<area shape="rect" id="node10" href="$classOrientedChamferMatching.html" title="OrientedChamferMatching" alt="" coords="201,443,375,469"/>
+</map>
