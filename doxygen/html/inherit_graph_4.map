@@ -1,5 +1,0 @@
-<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$classcv__ext_1_1CameraCalibrationBase.html" title="Abstract base class for calibration objects. " alt="" coords="5,31,212,57"/>
-<area shape="rect" id="node2" href="$classcv__ext_1_1CameraCalibration.html" title="CameraCalibration is a class to be used to estimate the intrisic parameters of a single camera..." alt="" coords="279,5,456,32"/>
-<area shape="rect" id="node3" href="$classcv__ext_1_1StereoCameraCalibration.html" title="cv_ext::StereoCameraCalibration" alt="" coords="260,56,475,83"/>
-</map>

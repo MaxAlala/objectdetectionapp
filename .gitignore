@@ -10,3 +10,4 @@ compile_commands.json
 Makefile
 /nbproject
 /CMakeFiles/*
+/doxygen

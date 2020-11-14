@@ -1,4 +1,0 @@
-<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$classcv__ext_1_1Tonemap.html" title="cv_ext::Tonemap" alt="" coords="5,5,128,32"/>
-<area shape="rect" id="node2" href="$classcv__ext_1_1GammaTonemap.html" title="Implementation of a simple tonemap algorithm based on gamma correction, see for details: ..." alt="" coords="176,5,345,32"/>
-</map>
